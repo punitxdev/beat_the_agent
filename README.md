@@ -131,3 +131,13 @@ sequenceDiagram
 Navigate to `http://localhost:5000` to access the dashboard. 
 
 The objective is strategic placement. Using the control panel on the right, define the grid boundaries, algorithmic speed, and obstacle density. When the round begins, your goal is to select a "Hideout" coordinate that maximizes topological complexity. Try to find the blind spots in the agent's multi-dimensional training space—force it into dead ends, bait it into temporal loops, and outlast its step limit to win the tournament.
+
+## Repository Manifest
+
+- `app.py`: The central Flask web server, crucial for bridging HTTP requests from the browser directly to the Python AI engine.
+- `rl_environment.py`: The environment rule engine, essential for generating random grids and guaranteeing they are mathematically solvable.
+- `agent_utils.py`: The deep learning integration layer, acting as the brain that transforms maze states into neural network predictions.
+- `static/app.js`: The client-side game loop, responsible for driving the real-time animation and managing tournament scores without reloading the page.
+- `static/style.css`: The responsive styling engine, vital for maintaining perfect grid aspect ratios and enforcing the professional UI aesthetic.
+- `templates/index.html`: The structural DOM blueprint, providing the foundational interactive dashboard and control panels for the user.
+- `agent_rlm_v2.keras`: The saved neural network weights, containing the actual trained memory and navigational policies of the AI agent.
