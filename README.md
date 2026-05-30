@@ -141,3 +141,6 @@ The objective is strategic placement. Using the control panel on the right, defi
 - `static/style.css`: The responsive styling engine, vital for maintaining perfect grid aspect ratios and enforcing the professional UI aesthetic.
 - `templates/index.html`: The structural DOM blueprint, providing the foundational interactive dashboard and control panels for the user.
 - `agent_rlm_v2.keras`: The saved neural network weights, containing the actual trained memory and navigational policies of the AI agent.
+
+---
+*Made with love by Punit*
