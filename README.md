@@ -4,35 +4,110 @@ Beat Agent Putin is a high-fidelity, decoupled web application that serves as an
 
 ## Architectural Overview
 
-The project is structured around a strict client-server decoupling, ensuring that heavy tensor computations remain entirely isolated from the browser's render thread. This guarantees high frame rates and a seamless user experience during live simulation.
+The project is structured around a strict client-server decoupling, ensuring that heavy tensor computations remain entirely isolated from the browser's render thread.
+
+```mermaid
+graph TD
+    subgraph Frontend [Presentation Layer: Web Browser]
+        UI[User Interface Controls]
+        GameLoop[Asynchronous Game Loop]
+        Grid[Dynamic CSS Grid Renderer]
+        
+        UI --> GameLoop
+        GameLoop --> Grid
+    end
+
+    subgraph Backend [Inference Engine: Flask / Python]
+        API[RESTful API Router]
+        EnvGen[BFS Grid Generator]
+        DQN[Deep Q-Network AI]
+        
+        API --> EnvGen
+        API --> DQN
+    end
+
+    GameLoop -- "Fetch /api/generate" --> API
+    GameLoop -- "Fetch /api/move" --> API
+```
 
 ### 1. The Inference Engine (Backend API)
-Driven by a Python/Flask architecture, the backend is responsible for topological generation and asynchronous tensor inference.
+- **Stochastic Environment Generation:** The engine dynamically constructs 2D grids parameterized by user-defined wall probabilities. It employs a Breadth-First Search (BFS) graph-traversal algorithm that validates topological solvability before transmitting the environment to the client.
+- **Deep Q-Network AI:** The core intelligence is a Multi-Layer Perceptron (MLP) built with TensorFlow/Keras, trained via Q-learning to maximize a sophisticated reward structure (penalizing walls/out-of-bounds, rewarding goal acquisition).
 
-- **Stochastic Environment Generation (`rl_environment.py`):** The engine dynamically constructs 2D grids parameterized by user-defined wall probabilities. To prevent impossible scenarios, it employs a Breadth-First Search (BFS) graph-traversal algorithm that validates topological solvability before transmitting the environment to the client.
-- **Deep Q-Network AI (`agent_utils.py`):** The core intelligence is a Multi-Layer Perceptron (MLP) built with TensorFlow/Keras, featuring a robust 256-128-64 neural architecture. 
-- **12-Dimensional State Formulation:** The AI perceives the grid not as pixels, but through a highly engineered 12-dimensional state vector. This includes relative goal vectors, normalized proximity to adjacent walls in four cardinal directions, cyclical loop-detection flags, and temporal constraints (step count decay).
-- **Complex Reward Function:** The agent has been trained via Q-learning to maximize a sophisticated reward structure: highly penalizing wall collisions (-20) and out-of-bounds attempts (-10), subtly rewarding distance minimization (+0.5), and heavily incentivizing goal acquisition (+200).
+```mermaid
+graph LR
+    subgraph 12-Dimensional State Vector
+        A[Relative Goal Distance]
+        B[Normalized Wall Proximity]
+        C[Temporal Step Decay]
+        D[Cyclical Loop Flags]
+    end
+    
+    subgraph TensorFlow / Keras MLP Architecture
+        L1[Input: 12 Nodes]
+        L2[Hidden: 256 Nodes]
+        L3[Hidden: 128 Nodes]
+        L4[Hidden: 64 Nodes]
+        Out[Output: 4 Nodes]
+    end
+    
+    A --> L1
+    B --> L1
+    C --> L1
+    D --> L1
+    
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> Out
+    
+    Out --> Action[Predicted Action: Up, Down, Left, Right]
+```
 
 ### 2. The Presentation Layer (Frontend)
-The interface is engineered using purely native Web Technologies (Vanilla JavaScript, HTML5, CSS3) to eliminate framework bloat and dependency overhead.
+- **Dynamic CSS Grid Rendering:** The frontend relies on responsive fractional `minmax(0, 1fr)` layouts to guarantee that aspect ratios remain perfectly rigid regardless of grid complexity.
+- **Thematic Aesthetics:** The dashboard employs a professional constructivist design utilizing a sharp red, white, and blue palette to reflect the thematic "KGB Evasion" narrative.
 
-- **Dynamic CSS Grid Rendering (`style.css`):** The frontend relies on responsive fractional `minmax(0, 1fr)` grid layouts. This guarantees that whether the environment is a simple 5x5 grid or a massive 25x25 complex, the aspect ratio and dimensional footprint remain perfectly rigid.
-- **Asynchronous State Loop (`app.js`):** The JavaScript engine acts as a game-loop controller. It tracks user-agent scores across multiple rounds and orchestrates the animation sequence by executing asynchronous REST API calls (`/api/move`) to fetch the DQN's predicted tensor actions without locking the UI.
-- **Thematic Aesthetics:** The dashboard employs a calculated, professional constructivist design. Utilizing a sharp red, white, and blue palette, rigid geometric borders, and authoritative typography, the UI immerses the user in the Cold War "KGB Evasion" narrative.
+## Tournament Workflow
 
-## Simulation Features
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser (Frontend)
+    participant Server (Backend AI)
+    
+    User->>Browser (Frontend): Configures Grid Size & Density
+    Browser (Frontend)->>Server (Backend AI): Request /api/generate
+    Server (Backend AI)-->>Browser (Frontend): Returns BFS-Validated Solvable Maze
+    User->>Browser (Frontend): Selects Hideout (Goal) Coordinate
+    
+    loop Until Goal Reached or Step Limit
+        Browser (Frontend)->>Server (Backend AI): Request /api/move (Current State)
+        Server (Backend AI)->>Server (Backend AI): Evaluate 12D State Vector via DQN
+        Server (Backend AI)-->>Browser (Frontend): Returns Optimal Action Vector
+        Browser (Frontend)->>Browser (Frontend): Animates Movement & Updates Score
+    end
+    
+    Browser (Frontend)->>User: Resolves Match & Updates Dashboard
+```
 
-- **Granular Complexity Control:** Users can manipulate the environment's wall density down to exact percentile thresholds, altering the fundamental landscape of the simulation.
-- **Real-Time Predictive Visualization:** Observe the internal logic of a trained neural network as it calculates spatial routes, attempts to backtrack out of dead ends, and adjusts its policy on the fly.
-- **Temporal Loop Avoidance:** The backend specifically tracks coordinate history to trigger "is_looping" and "is_stuck" penalty flags, forcing the neural network to break out of cyclical pathfinding failures.
-- **Persistent Tournament Mode:** A fully tracked round-by-round scoreboard that pits human ingenuity against machine optimization over a continuous session.
+## Technology Stack
+
+**Frontend (Presentation Layer)**
+- **HTML5:** Semantic markup structure.
+- **CSS3:** Custom styling, CSS Grid, and responsive flexbox layouts (No CSS frameworks).
+- **Vanilla JavaScript (ES6+):** Asynchronous API fetching, DOM manipulation, and state management (No JS frameworks).
+
+**Backend (Inference Engine)**
+- **Python (3.8+):** Core backend logic.
+- **Flask:** Lightweight WSGI web application framework for routing and API endpoints.
+- **NumPy:** High-performance matrix operations for grid generation and state array manipulation.
+
+**Artificial Intelligence**
+- **TensorFlow / Keras:** Deep learning library used to construct and train the Deep Q-Network.
+- **Q-Learning Algorithm:** Reinforcement learning technique utilized to discover optimal navigation policies.
 
 ## Local Installation and Execution
-
-### System Requirements
-- Python 3.8 or higher
-- A standard web browser (Chrome/Firefox/Edge)
 
 ### Deployment Instructions
 
@@ -56,13 +131,3 @@ The interface is engineered using purely native Web Technologies (Vanilla JavaSc
 Navigate to `http://localhost:5000` to access the dashboard. 
 
 The objective is strategic placement. Using the control panel on the right, define the grid boundaries, algorithmic speed, and obstacle density. When the round begins, your goal is to select a "Hideout" coordinate that maximizes topological complexity. Try to find the blind spots in the agent's multi-dimensional training space—force it into dead ends, bait it into temporal loops, and outlast its step limit to win the tournament.
-
-## Repository Manifest
-
-- `app.py`: The central Flask router bridging HTTP requests to the neural network.
-- `rl_environment.py`: Stochastic grid generation and graph-validation logic.
-- `agent_utils.py`: The TensorFlow integration, state-vector formulation, and Q-learning mechanics.
-- `static/app.js`: The client-side game loop and asynchronous fetch controller.
-- `static/style.css`: The responsive styling engine and thematic design rules.
-- `templates/index.html`: The structural DOM and dashboard layout.
-- `agent_rlm_v2.keras`: The serialized, pre-trained weights of the Deep Q-Network.
