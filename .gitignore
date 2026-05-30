@@ -1,0 +1,27 @@
+# Python Environments
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env.bak/
+venv.bak/
+
+# Project Specific
+*.png
+*.jpg
+*.jpeg
+agent_rlm
+agent_rlm (1)
+agent_rlm_model.keras
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / OS Files
+.vscode/
+.idea/
+*.swp
+.DS_Store

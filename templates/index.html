@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat Agent Putin — Maze Tournament</title>
+    <meta name="description" content="Challenge a DQN reinforcement learning agent in a maze navigation tournament. Pick tricky targets to exploit the AI's blind spots.">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=10.0">
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="dashboard-layout">
+        <div class="grid-panel">
+            <div class="maze-wrapper" id="maze-wrapper">
+                <div class="kgb-stamp">TOP SECRET</div>
+                <div id="maze-container" class="maze-grid"></div>
+                <div id="result-overlay" class="result-overlay hidden">
+                    <div class="result-overlay-content">
+                        <i id="result-icon" class="fa-solid fa-trophy"></i>
+                        <span id="result-text">Goal Reached!</span>
+                        <button id="btn-next-round" class="btn-primary" style="margin-top: 1rem;">NEXT ROUND <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="game-footer">
+                <div class="legend-bar">
+                    <div class="legend-item"><span class="lg-box lg-start"></span>Agent Putin</div>
+                    <div class="legend-item"><span class="lg-box lg-goal"></span>Hideout</div>
+                    <div class="legend-item"><span class="lg-box lg-wall"></span>Wall</div>
+                    <div class="legend-item"><span class="lg-box lg-path"></span>Trail</div>
+                </div>
+                <div id="step-display" class="step-display">Steps: <strong id="game-steps">0</strong> / <strong id="game-step-limit">0</strong></div>
+            </div>
+        </div>
+        <div class="control-panel">
+            <div class="game-logo">
+                <div class="logo-icon"><i class="fa-solid fa-user-secret"></i></div>
+                <h1>BEAT AGENT PUTIN</h1>
+                <p class="logo-sub">KGB Evasion Tournament</p>
+            </div>
+            <div class="game-hud">
+                <div class="hud-section">
+                    <div class="score-block you-block">
+                        <span class="score-label">SPY (YOU)</span>
+                        <span id="score-you" class="score-num">0</span>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="score-block ai-block">
+                        <span class="score-label">AGENT PUTIN</span>
+                        <span id="score-ai" class="score-num">0</span>
+                    </div>
+                </div>
+                <div class="hud-section" style="flex-direction: column; align-items: flex-end; gap: 0.2rem;">
+                    <span class="hud-label">ROUND</span>
+                    <span id="hud-round" class="hud-val">0 / 0</span>
+                    <div id="hud-status" class="hud-status idle" style="margin-top: 0.2rem;">
+                        <span class="status-dot"></span>
+                        <span id="hud-status-text">Ready to start</span>
+                    </div>
+                </div>
+            </div>
+            <div class="setup-card">
+                <div class="setup-field">
+                    <label>TOURNAMENT ROUNDS <span class="field-info">(Set before starting)</span></label>
+                    <input type="number" id="setup-rounds" class="num-input" value="5" min="1" max="100">
+                </div>
+                <div class="setup-field">
+                    <label>GRID SIZE <span id="setup-grid-val" class="field-val">15</span></label>
+                    <input type="range" id="setup-grid-size" min="5" max="25" value="15">
+                </div>
+                <div class="setup-field">
+                    <label>WALL DENSITY <span id="setup-complexity-val" class="field-val">20%</span></label>
+                    <input type="range" id="setup-complexity" min="5" max="30" value="20" step="1">
+                </div>
+                <div class="setup-field">
+                    <label>AGENT SPEED <span id="setup-speed-val" class="field-val">150ms</span></label>
+                    <input type="range" id="setup-speed" min="50" max="500" value="150" step="10">
+                </div>
+                <div class="action-buttons">
+                    <button id="btn-start" class="btn-primary btn-large">
+                    <i class="fa-solid fa-play"></i> START TOURNAMENT
+                </button>
+                    <button id="btn-rules" class="btn-secondary"><i class="fa-solid fa-scroll"></i> READ BRIEFING</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="rules-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="btn-close-rules" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-user-secret"></i> MISSION BRIEFING</h2>
+                <p>Classified KGB Evasion Tactics</p>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3><i class="fa-solid fa-crosshairs"></i> The Objective</h3>
+                    <p>Welcome, spy. You are stranded deep in enemy territory, and <strong>KGB Agent Putin</strong> is on your tail. You must pick the perfect spot to hide in the randomly generated concrete labyrinths. If he finds you before his stamina runs out, you're caught. If his batteries die or he gets completely lost... you survive.</p>
+                </div>
+                <div class="info-section">
+                    <h3><i class="fa-solid fa-microchip"></i> The Technology (and its flaws)</h3>
+                    <p>Agent Putin is powered by a Deep Q-Network (DQN). The KGB proudly claims this model has an <strong>82% test accuracy</strong>. That sounds intimidating, until you realize that means he has a hilarious <strong>18% margin of error</strong> where his digital brain simply short-circuits.</p>
+                    <p style="margin-top:0.5rem;">He's great at walking down straight hallways, but if you put a few corners in his way, he might just walk in circles forever. Your job is to exploit that exact weakness.</p>
+                </div>
+                <div class="info-section">
+                    <h3><i class="fa-solid fa-list-check"></i> Rules of Engagement</h3>
+                    <ul>
+                        <li><strong>Set the Rounds:</strong> Decide how many times you want to taunt him before starting the tournament.</li>
+                        <li><strong>Pick your Hideout:</strong> Click any reachable cell (empty grid block) to set your hiding spot.</li>
+                        <li><strong>Tweak the Parameters:</strong> You can dynamically change the grid size and wall density <em>between rounds</em> to make the maze harder for him.</li>
+                        <li>Whoever has the most points at the end of the tournament wins.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="end-modal" class="modal-overlay hidden">
+        <div class="modal-content text-center">
+            <div id="end-icon" class="end-icon"><i class="fa-solid fa-trophy"></i></div>
+            <h1 id="end-title" class="end-title">TOURNAMENT OVER</h1>
+            <p id="end-subtitle" class="end-subtitle">You survived!</p>
+            <div class="end-scores">
+                <div class="end-score-card you-end"><span class="end-label">SPY</span><span id="end-score-you" class="end-num">0</span></div>
+                <span class="end-dash">—</span>
+                <div class="end-score-card ai-end"><span class="end-label">AGENT PUTIN</span><span id="end-score-ai" class="end-num">0</span></div>
+            </div>
+            <button id="btn-play-again" class="btn-primary" style="margin-top: 1rem;"><i class="fa-solid fa-rotate-right"></i> NEW TOURNAMENT</button>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}?v=10.0"></script></script>
+</body>
+</html>
